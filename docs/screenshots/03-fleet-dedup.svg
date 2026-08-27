@@ -1,0 +1,20 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 720'>
+  <defs>
+    <linearGradient id='g' x1='0' x2='0' y1='0' y2='1'>
+      <stop offset='0' stop-color='#222'/>
+      <stop offset='1' stop-color='#111'/>
+    </linearGradient>
+  </defs>
+  <rect width='1200' height='720' fill='url(#g)'/>
+  <text x='60' y='80' font-family='-apple-system, Segoe UI, sans-serif'
+        font-size='32' font-weight='600' fill='#eee'>Fleet dedup</text>
+  <text x='60' y='120' font-family='-apple-system, Segoe UI, sans-serif'
+        font-size='18' fill='#aaa'>Run `disk-inventory.py fleet dedup <fleet-dir>` first.</text>
+  <g transform='translate(60,160)'>
+    <rect width='320' height='110' rx='10' fill='#1c1c1c' stroke='#333'/>
+    <rect x='340' width='320' height='110' rx='10' fill='#1c1c1c' stroke='#333'/>
+    <rect x='680' width='320' height='110' rx='10' fill='#1c1c1c' stroke='#333'/>
+    <rect width='1080' height='110' rx='10' fill='#171717' stroke='#333' y='130'/>
+    <rect width='1080' height='250' rx='10' fill='#171717' stroke='#333' y='260'/>
+  </g>
+</svg>

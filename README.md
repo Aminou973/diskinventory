@@ -131,6 +131,22 @@ Bind defaults to `127.0.0.1`. To expose on the LAN, pass
 `--bind 0.0.0.0 --token <secret>` and call clients with
 `Authorization: Bearer <secret>`.
 
+### Live dashboard
+
+![Live dashboard](docs/screenshots/01-dashboard.svg)
+
+### Fleet dedup
+
+![Fleet dedup report](docs/screenshots/03-fleet-dedup.svg)
+
+### Offline override UI (`inventory.html`)
+
+![Override UI](docs/screenshots/04-override-ui.svg)
+
+> To regenerate real PNGs from a running run, install Playwright and run
+> `python spec/build_screenshots.py`. See
+> [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md).
+
 ## Fleet mode
 
 `hosts.txt` format (one per line, `#` comments):

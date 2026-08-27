@@ -27,3 +27,7 @@ Thumbs.db
 
 # Test scratch
 spec/fixtures/_run/
+
+# Screenshot scratch
+docs/screenshots/*.tmp
+docs/screenshots/*.bak
