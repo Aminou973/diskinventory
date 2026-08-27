@@ -69,6 +69,11 @@ def cmd_run(args: argparse.Namespace) -> int:
     # 1. Detect environment
     print("[run] 1/5 detect environment…")
     env = env_detect.detect()
+    # Override scan roots if --scan-root was passed (repeatable)
+    if getattr(args, "scan_root", None):
+        env["ScanRoots"] = [{"Name": f"Custom{i}", "Path": p}
+                            for i, p in enumerate(args.scan_root)]
+        print(f"[run]   scan-roots overridden: {args.scan_root}")
     # Use the user-provided RunId if any
     if args.run_id:
         env["RunId"] = args.run_id
@@ -336,6 +341,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_run = sub.add_parser("run", help="detect → collect → classify → plan → apply/export")
     p_run.add_argument("--mode", choices=["report", "dryrun", "auto"], default="report")
     p_run.add_argument("--output-dir", default="./out/latest")
+    p_run.add_argument("--scan-root", action="append", default=None,
+                       help="Override ScanRoots (repeatable). Path can be a "
+                            "file or directory.")
     p_run.add_argument("--compute-hashes", action="store_true",
                        help="SHA-1 hash every file (slow; enables dedup)")
     p_run.add_argument("--classify-exif", action="store_true",
