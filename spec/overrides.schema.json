@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://diskinventory.local/spec/overrides.schema.json",
+  "title": "DiskInventory per-item overrides",
+  "description": "Shape produced by the HTML/JS override UI and consumed by the planner.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path","action"],
+        "properties": {
+          "path":   { "type": "string", "minLength": 1 },
+          "action": { "type": "string", "enum": ["keep","group","archive","quarantine","delete","move"] }
+        }
+      }
+    }
+  }
+}

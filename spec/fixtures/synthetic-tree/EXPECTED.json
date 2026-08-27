@@ -1,0 +1,10 @@
+{
+  "Categories": {
+    "Document": 3,
+    "Junk": 2,
+    "Archive": 4,
+    "HeavyCache": 2,
+    "Project": 3,
+    "Image": 2
+  }
+}

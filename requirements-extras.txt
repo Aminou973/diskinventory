@@ -1,0 +1,9 @@
+# DiskInventory optional extras
+#
+# All four are OPTIONAL. The base engine runs on Python stdlib only.
+
+# --classify-exif: read EXIF DateTimeOriginal from images for date grouping
+Pillow>=9.0
+
+# WinRM fallback for fleet scan when SSH to a Windows worker is closed
+pywinrm>=0.4.3

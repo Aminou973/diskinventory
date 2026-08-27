@@ -1,367 +1,441 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-disk-inventory — Linux/macOS entry point for DiskInventory.
-
-Single command to:
-  - Scan the current machine (auto-detected).
-  - Classify every item.
-  - Write CSV + HTML + Markdown reports.
-  - Optionally dry-run, execute, restore, or purge the quarantine.
+disk-inventory.py — DiskInventory v2.0 entry point.
 
 Subcommands:
-  run          (default) scan + classify + export; optionally apply
-  restore      reverse a journal (default --what-if)
-  purge        permanently delete _Quarantine/<runId> contents older than N days
+    run      — detect → collect → classify → plan → (apply) → export
+    restore  — reverse a journal produced by `run`
+    purge    — delete old _Quarantine/<runId>/ directories
+    serve    — start the local web UI for an existing run
+    fleet    — SSH/coord coordinator + cross-host dedup
+    migrate  — read v1.x run dir, emit v2 layout
 
-Modes (for `run`):
-  report       (default, read-only)
-  dryrun       writes a journal of intent, no disk changes
-  auto         executes the plan, soft-deletes only (move to _Quarantine)
-
-Examples:
-  ./disk-inventory.py --mode report --output-dir out/01-report
-  ./disk-inventory.py --mode dryrun --output-dir out/02-dryrun
-  ./disk-inventory.py --mode auto   --output-dir out/03-auto --yes
-  ./disk-inventory.py restore out/03-auto/actions-journal.jsonl --apply
-  ./disk-inventory.py purge --older-than-days 30
-
-The tool is self-discovering: it uses Path(__file__).parent to find its own
-location, then loads modules from src/. No install, no env vars.
+Backward compatibility:
+    The legacy v1.1.0 `--mode` flag is also accepted (prints a deprecation
+    hint, then forwards to `run --mode ...`).
 """
+
+from __future__ import annotations
 
 import argparse
 import json
 import os
+import shutil
 import sys
+import threading
 import time
+import webbrowser
 from datetime import datetime, timezone
 from pathlib import Path
 
-# ---- Resolve tool location --------------------------------------------------
+HERE = Path(__file__).resolve().parent
+SRC = HERE / "src"
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
-TOOL_DIR = Path(__file__).resolve().parent
-SRC_DIR = TOOL_DIR / "src"
-CONF_DIR_DEFAULT = TOOL_DIR / "config"
-
-# Ensure src/ is importable
-sys.path.insert(0, str(SRC_DIR))
-
-from detect_environment import detect_environment        # noqa: E402
-from collect_inventory import collect_inventory          # noqa: E402
-from classify_items import classify_items                # noqa: E402
-from plan_actions import plan_actions                    # noqa: E402
-from apply_actions import apply_actions                  # noqa: E402
-from export_reports import export_reports                # noqa: E402
-from restore_from_journal import restore_from_journal    # noqa: E402
-
-
-# ---- Helpers ----------------------------------------------------------------
-
-def _now_run_id() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+from src import env_detect          # noqa: E402
+from src import collect             # noqa: E402
+from src import classify            # noqa: E402
+from src import classify_content    # noqa: E402
+from src import plan                # noqa: E402
+from src import apply               # noqa: E402
+from src import restore             # noqa: E402
+from src import export              # noqa: E402
+from src import notify              # noqa: E402
+from src import serve as serve_mod   # noqa: E402
+from src import fleet               # noqa: E402
+from src import migrate             # noqa: E402
 
 
-def _is_non_interactive() -> bool:
-    """Return True if stdin is not a TTY (cron, CI, redirected input)."""
-    try:
-        return not sys.stdin.isatty()
-    except Exception:
-        return True
+VERSION = "2.0.0"
 
 
-def _load_config(path: Path):
-    """Load a JSON config file. Returns parsed object (dict or list)."""
-    if not path.exists():
-        raise SystemExit(f"Missing config file: {path}")
-    with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
+def _now_utc_iso() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _make_outdir(outdir: Path) -> Path:
-    outdir.mkdir(parents=True, exist_ok=True)
-    return outdir
+# --- run ------------------------------------------------------------------
 
+def cmd_run(args: argparse.Namespace) -> int:
+    output_dir = Path(args.output_dir).resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    run_id = output_dir.name + "-" + datetime.now(timezone.utc).strftime("%H%M%S")
 
-def _prompt_yes_no(question: str, default_no: bool = True) -> bool:
-    """Ask a Y/N question on stdin. Returns True only on Y/y."""
-    suffix = "[y/N]" if default_no else "[Y/n]"
-    try:
-        ans = input(f"{question} {suffix} ").strip()
-    except EOFError:
-        return False
-    if not ans:
-        return not default_no
-    return ans.lower() in ("y", "yes")
+    print(f"[run] DiskInventory v{VERSION} — run {run_id} (mode={args.mode})")
+    print(f"[run] output: {output_dir}")
 
-
-# ---- Subcommand: run --------------------------------------------------------
-
-def cmd_run(args) -> int:
-    mode = args.mode
-    outdir = Path(args.output_dir).expanduser().resolve()
-    conf_dir = Path(args.config_dir).expanduser().resolve() if args.config_dir else CONF_DIR_DEFAULT
-    rules_path = conf_dir / "classification.linux.json"
-    paths_path = conf_dir / "paths_to_scan.linux.json"
-
-    rules = _load_config(rules_path)
-    paths_config = _load_config(paths_path)
-
-    run_id = _now_run_id()
-    _make_outdir(outdir)
-
-    print(f"=== DiskInventory :: Mode = {mode} ===", flush=True)
-    print(f"Output dir: {outdir}", flush=True)
-    print(f"Tool dir:   {TOOL_DIR}", flush=True)
-
-    # Step 1: Detect environment
-    print("[1/5] Detecting environment...", flush=True)
-    env = detect_environment(outdir, paths_config)
-    print(f"       Drives: {len(env['Drives'])}  Profiles: {len(env['UserProfiles'])}"
-          f"  Scan roots: {len(env['ScanRoots'])}", flush=True)
-
-    # Step 2: Collect inventory
-    if args.roots_override:
-        roots = [str(r) for r in args.roots_override]
+    # 1. Detect environment
+    print("[run] 1/5 detect environment…")
+    env = env_detect.detect()
+    # Use the user-provided RunId if any
+    if args.run_id:
+        env["RunId"] = args.run_id
     else:
-        roots = [str(r["Path"]) for r in env["ScanRoots"]]
-    print(f"[2/5] Collecting inventory from {len(roots)} root(s)...", flush=True)
+        env["RunId"] = run_id
+    (output_dir / "environment.json").write_text(
+        json.dumps(env, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
-    size_cache = None
-    if paths_config.get("sizeCacheEnabled", False):
-        cache_file = outdir / paths_config.get("sizeCacheFileName", "size-cache.json")
-        if cache_file.exists():
+    if args.notify_webhook:
+        notify.notify_run_started(run_id=env["RunId"], mode=args.mode,
+                                  webhook=args.notify_webhook,
+                                  webhook_token=args.notify_webhook_token)
+
+    # 2. Collect
+    print("[run] 2/5 collect inventory…")
+    progress_lock = threading.Lock()
+    last_print = [0.0]
+    def _collect_prog(done: int, total: int) -> None:
+        with progress_lock:
+            now = time.time()
+            if now - last_print[0] > 0.5:
+                last_print[0] = now
+                print(f"[run]   collected {done:,} paths…", flush=True)
+    rows = collect.collect(env, compute_hashes=args.compute_hashes,
+                           progress=_collect_prog)
+
+    # 3. Classify
+    print(f"[run] 3/5 classify {len(rows):,} items…")
+    classify.classify_rows(rows, tool_dir=HERE)
+    # MIME sniffing (default-on, no deps)
+    mime_count = 0
+    for r in rows:
+        if r.get("Kind") == "File":
             try:
-                with cache_file.open("r", encoding="utf-8") as f:
-                    size_cache = json.load(f)
+                from pathlib import Path as _P
+                r["MIMEType"] = classify_content.sniff_mime(_P(r["Path"]))
+                mime_count += 1
             except Exception:
-                size_cache = None
-        else:
-            size_cache = {}
+                r["MIMEType"] = "application/octet-stream"
+    # Optional content signals
+    if args.compute_hashes:
+        print(f"[run]   SHA-1 dedup…")
+        dup = classify_content.annotate_duplicate_groups(rows)
+        print(f"[run]   {dup} duplicate group(s) found")
+    if args.classify_exif:
+        print(f"[run]   EXIF date grouping…")
+        n = classify_content.annotate_exif_dates(rows)
+        print(f"[run]   {n} image(s) annotated with EXIF dates")
+    if args.classify_cluster:
+        print(f"[run]   name-similarity clustering…")
+        c = classify_content.annotate_clusters(rows)
+        print(f"[run]   {c} cluster(s) found")
 
-    def progress(c, p):
-        print(f"       ... {c} items (current: {p})", flush=True)
-
-    collected = collect_inventory(
-        scan_roots=roots,
-        config=paths_config,
-        compute_hashes=args.compute_hashes,
-        size_cache=size_cache,
-        max_items=args.max_items,
-        progress_sink=progress,
+    # 4. Plan
+    print("[run] 4/5 plan actions…")
+    overrides_path = output_dir / "overrides.json"
+    overrides = plan.load_overrides(overrides_path) if overrides_path.is_file() else []
+    plan_doc = plan.build_plan(rows, run_id=env["RunId"], overrides=overrides)
+    (output_dir / "plan.json").write_text(
+        json.dumps(plan_doc, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    print(f"       Items: {collected['Stats']['TotalItems']}"
-          f" (files: {collected['Stats']['FilesScanned']}"
-          f", dirs: {collected['Stats']['DirsScanned']})"
-          f"  Warnings: {len(collected['Warnings'])}"
-          f"  Cache hits: {collected['Stats']['CacheHits']}",
-          flush=True)
+    counts = plan_doc["Totals"]["byAction"]
+    print(f"[run]   {sum(counts.values()):,} items planned: {counts}")
 
-    # Persist size cache
-    if paths_config.get("sizeCacheEnabled") and size_cache is not None:
-        cache_file = outdir / paths_config.get("sizeCacheFileName", "size-cache.json")
+    # 5. Export CSV/MD/HTML always; Apply only in dryrun/auto
+    print("[run] 5/5 export…")
+    export.write_csv(rows, output_dir / "inventory.csv")
+    export.write_markdown(env, rows, output_dir / "inventory.md")
+    warnings = []
+    if not env.get("Admin"):
+        warnings.append("Running without admin rights — some system locations may be skipped.")
+    export.write_html(env, rows, output_dir / "inventory.html", warnings=warnings)
+
+    summary: dict = {"applied": 0, "errors": 0, "skipped": 0}
+    if args.mode in ("dryrun", "auto"):
+        # Always write a dryrun journal
+        dryrun_summary = apply.apply_plan(plan_doc, journal_path=output_dir / "dryrun-journal.jsonl",
+                                          base_dir=output_dir, what_if=True)
+        print(f"[run]   dryrun journal: {dryrun_summary}")
+    if args.mode == "auto":
+        if not args.yes:
+            resp = input("[run] Apply? Type 'yes' to proceed: ").strip().lower()
+            if resp != "yes":
+                print("[run] Apply aborted.")
+                return 1
+        live_summary = apply.apply_plan(plan_doc, journal_path=output_dir / "actions-journal.jsonl",
+                                        base_dir=output_dir, what_if=False)
+        summary.update(live_summary)
+        print(f"[run]   applied: {live_summary}")
+
+    # Optional: start the dashboard
+    if args.serve:
+        from src.serve import _State
+        state = _State(output_dir)
         try:
-            with cache_file.open("w", encoding="utf-8") as f:
-                json.dump(size_cache, f, ensure_ascii=False)
-        except Exception:
-            pass
+            state.serve_thread = None
+            state.load_rows()
+            if (output_dir / "environment.json").is_file():
+                state.env = json.loads((output_dir / "environment.json").read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"[run] dashboard preload error: {e}")
+        port = args.port
+        host = args.bind
+        token = args.token
+        url = f"http://{host}:{port}/"
+        print(f"[run] dashboard: {url}")
+        if args.open:
+            try:
+                webbrowser.open(url)
+            except Exception:
+                pass
+        # Run server in foreground until Ctrl+C
+        serve_mod.serve_forever(state, host=host, port=port, token=token)
 
-    # Step 3: Classify
-    print("[3/5] Classifying items...", flush=True)
-    classified = classify_items(collected["Items"], rules)
-    by_cat = {}
-    for item in classified:
-        by_cat[item["Category"]] = by_cat.get(item["Category"], 0) + 1
-    print("       Categories:", flush=True)
-    for cat in sorted(by_cat, key=lambda k: -by_cat[k]):
-        print(f"         - {cat:12s} {by_cat[cat]:8d}", flush=True)
-
-    # Step 4: Plan
-    print("[4/5] Planning actions...", flush=True)
-    plan = plan_actions(
-        classified=classified,
-        rules=rules,
-        config=paths_config,
-        overrides_path=args.honor_overrides,
-        run_id=run_id,
-        output_dir=str(outdir),
-        heavy_caches=env["HeavyCaches"],
-    )
-    by_act = {}
-    for p in plan:
-        by_act[p["Action"]] = by_act.get(p["Action"], 0) + 1
-    print("       Planned actions:", flush=True)
-    for act in sorted(by_act, key=lambda k: -by_act[k]):
-        print(f"         - {act:12s} {by_act[act]:8d}", flush=True)
-
-    # Step 5: Export reports (always)
-    print("[5/5] Writing reports...", flush=True)
-    paths = export_reports(
-        classified=classified,
-        plan=plan,
-        environment=env,
-        stats=collected["Stats"],
-        warnings=collected["Warnings"],
-        output_dir=str(outdir),
-        report_prefix="inventory",
-        mode=mode,
-    )
-    print(f"       CSV:      {paths['CsvPath']}", flush=True)
-    print(f"       HTML:     {paths['HtmlPath']}", flush=True)
-    print(f"       Markdown: {paths['MarkdownPath']}", flush=True)
-
-    # Write plan.json for transparency
-    try:
-        with (outdir / "plan.json").open("w", encoding="utf-8") as f:
-            json.dump(plan, f, ensure_ascii=False, separators=(",", ":"))
-    except Exception:
-        pass
-
-    # Apply actions if Auto or DryRun
-    non_interactive = _is_non_interactive()
-    if mode == "auto":
-        journal_path = outdir / "actions-journal.jsonl"
-        if not args.yes and not non_interactive:
-            print("", flush=True)
-            print(f"About to APPLY {len(plan)} planned action(s).", flush=True)
-            if not _prompt_yes_no("Type Y to proceed, anything else to abort.", default_no=True):
-                print("Aborted. Reports already written to " + str(outdir), flush=True)
-                return 2
-        elif non_interactive and not args.yes:
-            print("", flush=True)
-            print("Non-interactive mode detected and --yes not set. Refusing to run auto without explicit --yes.",
-                  flush=True)
-            print(f"Reports have been written to {outdir}. Re-run with --yes to execute.", flush=True)
-            return 2
-        print("Applying actions...", flush=True)
-        result = apply_actions(plan=plan, journal_path=str(journal_path), prompt=args.yes)
-        print(f"       Applied: {result['Applied']}  Skipped: {result['Skipped']}  Errored: {result['Errored']}",
-              flush=True)
-        print(f"       Journal: {result['JournalPath']}", flush=True)
-    elif mode == "dryrun":
-        journal_path = outdir / "dryrun-journal.jsonl"
-        print("DryRun: writing dryrun-journal...", flush=True)
-        result = apply_actions(plan=plan, journal_path=str(journal_path), what_if=True)
-        print(f"       Journal entries: {result['Applied'] + result['Skipped'] + result['Errored']} (no disk changes)",
-              flush=True)
-        print(f"       Journal: {result['JournalPath']}", flush=True)
-
-    print("", flush=True)
-    print(f"Done. Open {paths['HtmlPath']} in a browser to review.", flush=True)
+    if args.notify_webhook:
+        notify.notify_run_finished(run_id=env["RunId"], mode=args.mode,
+                                   totals=counts,
+                                   webhook=args.notify_webhook,
+                                   webhook_token=args.notify_webhook_token)
+    print(f"[run] done. outputs in {output_dir}")
     return 0
 
 
-# ---- Subcommand: restore ----------------------------------------------------
+# --- restore --------------------------------------------------------------
 
-def cmd_restore(args) -> int:
-    journal = Path(args.journal).expanduser().resolve()
-    if not journal.exists():
-        print(f"Journal not found: {journal}", file=sys.stderr)
+def cmd_restore(args: argparse.Namespace) -> int:
+    journal_path = Path(args.journal).resolve()
+    if not journal_path.is_file():
+        print(f"[restore] journal not found: {journal_path}", file=sys.stderr)
         return 2
-    print(f"=== Restore from journal: {journal} ===", flush=True)
-    sha1_cap = args.sha1_verify_max_mb * 1024 * 1024
-    result = restore_from_journal(
-        journal_path=str(journal),
-        sha1_verify_max_bytes=sha1_cap,
-        apply=args.apply,
-        what_if_preview=(not args.apply),
-    )
-    print(f"Restored: {result['Restored']}  Skipped: {result['Skipped']}"
-          f"  Errored: {result['Errored']}  Verified: {result['Verified']}"
-          f"  Mismatched: {result['Mismatched']}", flush=True)
-    return 0
+    base = Path(args.base_dir).resolve() if args.base_dir else journal_path.parent.parent
+    print(f"[restore] journal: {journal_path}")
+    print(f"[restore] base dir: {base}")
+    print(f"[restore] mode: {'APPLY' if args.apply else 'dry-run'}")
+    summary = restore.restore(journal_path, apply=args.apply, base_dir=base,
+                              sha1_verify_max_mb=args.sha1_verify_max_mb or 0)
+    print(f"[restore] {summary}")
+    if not args.apply:
+        print("[restore] pass --apply to actually move files back")
+    return 0 if summary["errors"] == 0 else 1
 
 
-# ---- Subcommand: purge ------------------------------------------------------
+# --- purge ---------------------------------------------------------------
 
-def cmd_purge(args) -> int:
-    root_base = Path(args.output_dir).expanduser().resolve() if args.output_dir else TOOL_DIR / "out"
-    quarantine = root_base / "_Quarantine"
-    if not quarantine.exists():
-        print(f"No _Quarantine at {quarantine}", flush=True)
+def cmd_purge(args: argparse.Namespace) -> int:
+    base = Path(args.base_dir).resolve() if args.base_dir else Path.cwd() / "_Quarantine"
+    if not base.is_dir():
+        print(f"[purge] no quarantine dir: {base}")
         return 0
     cutoff = time.time() - (args.older_than_days * 86400)
-    print(f"Purging quarantine subdirs older than {args.older_than_days} days...", flush=True)
     removed = 0
-    for entry in quarantine.iterdir():
-        if not entry.is_dir():
+    for child in sorted(base.iterdir()):
+        if not child.is_dir():
             continue
         try:
-            mtime = entry.stat().st_mtime
+            mtime = child.stat().st_mtime
         except OSError:
             continue
         if mtime < cutoff:
-            print(f"  Removing {entry}", flush=True)
-            try:
-                import shutil
-                shutil.rmtree(entry)
-                removed += 1
-            except OSError:
-                pass
-    print(f"Purged {removed} quarantine run(s).", flush=True)
+            if args.dry_run:
+                print(f"[purge] WOULD remove: {child}")
+            else:
+                shutil.rmtree(child, ignore_errors=True)
+                print(f"[purge] removed: {child}")
+            removed += 1
+    print(f"[purge] {removed} director{'y' if removed == 1 else 'ies'} {'would be' if args.dry_run else ''} removed")
     return 0
 
 
-# ---- Argument parser --------------------------------------------------------
+# --- serve (existing run dir) --------------------------------------------
+
+def cmd_serve(args: argparse.Namespace) -> int:
+    run_dir = Path(args.run_dir).resolve()
+    if not run_dir.is_dir():
+        print(f"[serve] not a directory: {run_dir}", file=sys.stderr)
+        return 2
+    state = serve_mod._State(run_dir)
+    env_p = run_dir / "environment.json"
+    if env_p.is_file():
+        try:
+            state.env = json.loads(env_p.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            pass
+    inv = run_dir / "inventory.csv"
+    if inv.is_file():
+        import csv as _csv
+        with open(inv, "r", encoding="utf-8", newline="") as fh:
+            state.rows = list(_csv.DictReader(fh))
+    plan_p = run_dir / "plan.json"
+    if plan_p.is_file():
+        try:
+            state.plan = json.loads(plan_p.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            pass
+    url = f"http://{args.bind}:{args.port}/"
+    print(f"[serve] {url}  (run dir: {run_dir})")
+    if args.open:
+        try:
+            webbrowser.open(url)
+        except Exception:
+            pass
+    serve_mod.serve_forever(state, host=args.bind, port=args.port, token=args.token)
+    return 0
+
+
+# --- fleet ---------------------------------------------------------------
+
+def cmd_fleet_scan(args: argparse.Namespace) -> int:
+    hosts = fleet.parse_hosts(Path(args.hosts))
+    if not hosts:
+        print(f"[fleet] no hosts parsed from {args.hosts}", file=sys.stderr)
+        return 1
+    output_dir = Path(args.output_dir).resolve()
+    ssh_key = Path(args.ssh_key).resolve() if args.ssh_key else None
+    print(f"[fleet] scanning {len(hosts)} host(s)…")
+    summary = fleet.scan_hosts(hosts, output_dir=output_dir, ssh_key=ssh_key,
+                               compute_hashes=args.compute_hashes,
+                               parallel=args.parallel)
+    print(f"[fleet] scanned: {len(summary['scanned'])}, "
+          f"errors: {len(summary['errors'])}")
+    return 0 if not summary["errors"] else 1
+
+
+def cmd_fleet_dedup(args: argparse.Namespace) -> int:
+    fleet_dir = Path(args.fleet_dir).resolve()
+    if not fleet_dir.is_dir():
+        print(f"[fleet] not a directory: {fleet_dir}", file=sys.stderr)
+        return 2
+    summary = fleet.cross_host_dedup(fleet_dir, top=args.top)
+    print(f"[fleet] dedup: {len(summary['items'])} group(s) "
+          f"written to {fleet_dir}/fleet-dedup.html")
+    if args.serve:
+        return cmd_serve(argparse.Namespace(
+            run_dir=str(fleet_dir),
+            bind=args.bind, port=args.port, token=args.token, open=args.open,
+        ))
+    return 0
+
+
+# --- migrate -------------------------------------------------------------
+
+def cmd_migrate(args: argparse.Namespace) -> int:
+    src = Path(args.src).resolve()
+    dst = Path(args.dst).resolve()
+    if not src.is_dir():
+        print(f"[migrate] not a directory: {src}", file=sys.stderr)
+        return 2
+    summary = migrate.migrate_v1_to_v2(src, dst)
+    print(f"[migrate] {summary}")
+    return 0
+
+
+# --- argparse ------------------------------------------------------------
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
+    p = argparse.ArgumentParser(
         prog="disk-inventory",
-        description="Self-discovering disk inventory + cleanup tool (Linux/macOS).",
+        description="DiskInventory v2.0 — unify, classify, dedup, dashboard, fleet.",
     )
-    sub = parser.add_subparsers(dest="subcommand")
+    p.add_argument("--version", action="version", version=f"%(prog)s {VERSION}")
+    sub = p.add_subparsers(dest="cmd", required=False)
 
-    # `run` subcommand (also the default when no subcommand is given)
-    run = sub.add_parser("run", help="Scan + classify + export + (optionally) apply")
-    run.add_argument("--mode", choices=("report", "dryrun", "auto"), default="report",
-                     help="Operating mode: report (default, read-only), dryrun (writes journal), auto (executes).")
-    run.add_argument("--output-dir", default=None,
-                     help="Where reports + journal + quarantine land. Default: <script dir>/out/<runId>.")
-    run.add_argument("--config-dir", default=None,
-                     help="Override path to the config/ directory. Default: <script dir>/config.")
-    run.add_argument("--roots-override", nargs="*", default=None,
-                     help="Optional list of paths to scan INSTEAD of auto-detected ones.")
-    run.add_argument("--max-items", type=int, default=0,
-                     help="Optional cap on total items collected. 0 = unlimited.")
-    run.add_argument("--compute-hashes", action="store_true",
-                     help="If set, compute SHA-1 of every file (slow).")
-    run.add_argument("--honor-overrides", default=None,
-                     help="Path to an overrides.json (produced by the HTML report) to apply on top of rules.")
-    run.add_argument("--yes", action="store_true",
-                     help="Required for auto mode in non-interactive contexts, or to skip per-action prompts.")
-    run.set_defaults(func=cmd_run)
+    # run
+    p_run = sub.add_parser("run", help="detect → collect → classify → plan → apply/export")
+    p_run.add_argument("--mode", choices=["report", "dryrun", "auto"], default="report")
+    p_run.add_argument("--output-dir", default="./out/latest")
+    p_run.add_argument("--compute-hashes", action="store_true",
+                       help="SHA-1 hash every file (slow; enables dedup)")
+    p_run.add_argument("--classify-exif", action="store_true",
+                       help="Extract EXIF date grouping (needs Pillow)")
+    p_run.add_argument("--classify-cluster", action="store_true",
+                       help="Name-similarity clustering (O(n²), capped per parent)")
+    p_run.add_argument("--yes", action="store_true", help="Skip the apply prompt")
+    p_run.add_argument("--run-id", default=None, help="Override the RunId")
+    p_run.add_argument("--serve", action="store_true",
+                       help="Start the web UI on :8765 after this run")
+    p_run.add_argument("--port", type=int, default=8765)
+    p_run.add_argument("--bind", default="127.0.0.1")
+    p_run.add_argument("--token", default=None,
+                       help="Bearer token required when bind != 127.0.0.1")
+    p_run.add_argument("--open", action="store_true",
+                       help="Open the dashboard URL in the default browser")
+    p_run.add_argument("--notify-webhook", default=None, help="POST events to URL")
+    p_run.add_argument("--notify-webhook-token", default=None)
+    p_run.set_defaults(func=cmd_run)
 
-    # `restore` subcommand
-    restore = sub.add_parser("restore", help="Reverse a journal")
-    restore.add_argument("journal", help="Path to actions-journal.jsonl")
-    restore.add_argument("--apply", action="store_true",
-                         help="Actually move files (default is --what-if preview).")
-    restore.add_argument("--sha1-verify-max-mb", type=int, default=1024,
-                         help="Max file size in MB for SHA-1 verification during restore (default 1024).")
-    restore.set_defaults(func=cmd_restore)
+    # restore
+    p_restore = sub.add_parser("restore", help="reverse an actions-journal")
+    p_restore.add_argument("journal", help="path to actions-journal.jsonl")
+    p_restore.add_argument("--apply", action="store_true")
+    p_restore.add_argument("--base-dir", default=None)
+    p_restore.add_argument("--sha1-verify-max-mb", type=int, default=0)
+    p_restore.set_defaults(func=cmd_restore)
 
-    # `purge` subcommand
-    purge = sub.add_parser("purge", help="Permanently delete _Quarantine/<runId> contents older than N days")
-    purge.add_argument("--output-dir", default=None,
-                       help="Where _Quarantine lives. Default: <script dir>/out.")
-    purge.add_argument("--older-than-days", type=int, default=30,
-                       help="Age threshold for purge (default 30). USE WITH CARE.")
-    purge.set_defaults(func=cmd_purge)
+    # purge
+    p_purge = sub.add_parser("purge", help="remove old _Quarantine/<runId>/ dirs")
+    p_purge.add_argument("--older-than-days", type=int, default=30)
+    p_purge.add_argument("--base-dir", default=None)
+    p_purge.add_argument("--dry-run", action="store_true")
+    p_purge.set_defaults(func=cmd_purge)
 
-    return parser
+    # serve
+    p_serve = sub.add_parser("serve", help="start the dashboard for an existing run")
+    p_serve.add_argument("run_dir")
+    p_serve.add_argument("--port", type=int, default=8765)
+    p_serve.add_argument("--bind", default="127.0.0.1")
+    p_serve.add_argument("--token", default=None)
+    p_serve.add_argument("--open", action="store_true")
+    p_serve.set_defaults(func=cmd_serve)
+
+    # fleet
+    p_fleet = sub.add_parser("fleet", help="multi-host scan + dedup")
+    sub_fleet = p_fleet.add_subparsers(dest="fleet_cmd", required=True)
+
+    p_fs = sub_fleet.add_parser("scan")
+    p_fs.add_argument("--hosts", required=True)
+    p_fs.add_argument("--output-dir", default="./fleet-out")
+    p_fs.add_argument("--ssh-key", default=None)
+    p_fs.add_argument("--compute-hashes", action="store_true")
+    p_fs.add_argument("--parallel", type=int, default=4)
+    p_fs.set_defaults(func=cmd_fleet_scan)
+
+    p_fd = sub_fleet.add_parser("dedup")
+    p_fd.add_argument("fleet_dir")
+    p_fd.add_argument("--top", type=int, default=50)
+    p_fd.add_argument("--serve", action="store_true")
+    p_fd.add_argument("--port", type=int, default=8765)
+    p_fd.add_argument("--bind", default="127.0.0.1")
+    p_fd.add_argument("--token", default=None)
+    p_fd.add_argument("--open", action="store_true")
+    p_fd.set_defaults(func=cmd_fleet_dedup)
+
+    # migrate
+    p_mig = sub.add_parser("migrate", help="read v1.x run dir, write v2 layout")
+    p_mig.add_argument("src", help="v1.x run directory")
+    p_mig.add_argument("--dst", required=True, help="v2 output directory")
+    p_mig.set_defaults(func=cmd_migrate)
+
+    return p
 
 
-def main(argv=None) -> int:
-    parser = build_parser()
-
-    # If the first positional looks like a subcommand, parse normally.
-    # Otherwise treat the whole argv as a `run` invocation (matches PS tool UX).
-    raw = list(sys.argv[1:] if argv is None else argv)
-    if not raw or raw[0] not in ("run", "restore", "purge", "-h", "--help"):
-        raw = ["run"] + raw
-
-    args = parser.parse_args(raw)
-    return args.func(args)
+def main(argv: list[str] | None = None) -> int:
+    argv = argv if argv is not None else sys.argv[1:]
+    # Backward-compat: legacy `--mode` flag is accepted and forwarded to `run`
+    legacy_mode = None
+    if argv and not argv[0] in {"run", "restore", "purge", "serve", "fleet",
+                                "migrate", "-h", "--help", "--version"}:
+        if "--mode" in argv:
+            legacy_mode = argv[argv.index("--mode") + 1] if argv.index("--mode") + 1 < len(argv) else "report"
+            print("[warn] legacy --mode flag detected; please use `disk-inventory.py run --mode ...`")
+            argv = ["run"] + argv
+    p = build_parser()
+    args = p.parse_args(argv)
+    if not getattr(args, "cmd", None):
+        # No subcommand: print help
+        p.print_help()
+        return 0
+    if args.cmd == "fleet" and not getattr(args, "fleet_cmd", None):
+        # `fleet` with no subcommand: print fleet help
+        p.parse_args(["fleet", "--help"])
+        return 0
+    try:
+        return int(args.func(args) or 0)
+    except KeyboardInterrupt:
+        print("\n[abort] interrupted")
+        return 130
 
 
 if __name__ == "__main__":

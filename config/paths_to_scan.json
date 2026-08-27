@@ -1,0 +1,3 @@
+[
+  {"_comment": "Platform-neutral default scan-roots. Used if the user does not pass --scan-root. env_detect may overlay these with platform-specific paths.", "name": "Home", "path": "~"}
+]

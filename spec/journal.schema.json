@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://diskinventory.local/spec/journal.schema.json",
+  "title": "DiskInventory journal entry",
+  "description": "One JSON Lines entry in actions-journal.jsonl or dryrun-journal.jsonl. v1.1.0 and v2.0 both emit this exact shape; the field order is fixed.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "ts", "action", "src", "dst", "category", "sizeBytes",
+    "sha1", "rule", "reason", "reversible", "applied", "error"
+  ],
+  "properties": {
+    "ts":          { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" },
+    "action":      { "type": "string", "enum": ["keep","group","archive","quarantine","delete","move"] },
+    "src":         { "type": ["string", "null"] },
+    "dst":         { "type": ["string", "null"] },
+    "category":    { "type": "string" },
+    "sizeBytes":   { "type": ["integer", "null"], "minimum": 0 },
+    "sha1":        { "type": ["string", "null"], "pattern": "^[A-F0-9]{40}$" },
+    "rule":        { "type": ["string", "null"] },
+    "reason":      { "type": "string" },
+    "reversible":  { "type": "boolean" },
+    "applied":     { "type": "boolean" },
+    "error":       { "type": ["string", "null"] }
+  }
+}

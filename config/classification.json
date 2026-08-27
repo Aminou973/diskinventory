@@ -1,0 +1,45 @@
+[
+  {
+    "_comment": "Platform-neutral base classification rules. v2.0 + classification.<os>.json are merged at runtime. First-match wins; later rules only run if no earlier rule matched. The `_SAFETY_KEEP` set in src/classify.py pins App/System/Project/Data/HeavyCache regardless of action.",
+    "category": "Archive",
+    "match": {
+      "fileExtensions": [".zip", ".7z", ".rar", ".tar", ".gz", ".tgz", ".bz2", ".xz", ".iso", ".img", ".whl"]
+    }
+  },
+  {
+    "category": "Document",
+    "match": {
+      "fileExtensions": [".pdf", ".doc", ".docx", ".odt", ".rtf", ".txt", ".md", ".xls", ".xlsx", ".ppt", ".pptx", ".epub"]
+    }
+  },
+  {
+    "category": "Image",
+    "match": {
+      "fileExtensions": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".tiff", ".heic", ".bmp", ".raw", ".cr2", ".nef"]
+    }
+  },
+  {
+    "category": "Video",
+    "match": {
+      "fileExtensions": [".mp4", ".mkv", ".mov", ".avi", ".wmv", ".flv", ".webm"]
+    }
+  },
+  {
+    "category": "Audio",
+    "match": {
+      "fileExtensions": [".mp3", ".flac", ".wav", ".aac", ".ogg", ".m4a", ".wma"]
+    }
+  },
+  {
+    "category": "Executable",
+    "match": {
+      "fileExtensions": [".exe", ".msi", ".bat", ".cmd", ".sh", ".app"]
+    }
+  },
+  {
+    "category": "Junk",
+    "match": {
+      "fileExtensions": [".tmp", ".temp", ".bak", ".old", ".log", ".cache", ".swp", ".swo"]
+    }
+  }
+]

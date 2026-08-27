@@ -1,0 +1,4 @@
+[
+  {"_comment": "Windows overlay for paths_to_scan. Merged AFTER config/paths_to_scan.json. Use %USERPROFILE% — the loader expands env vars on Windows.", "name": "Profile", "path": "%USERPROFILE%"},
+  {"name": "ProgramData", "path": "%PROGRAMDATA%"}
+]

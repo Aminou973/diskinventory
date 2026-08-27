@@ -1,0 +1,434 @@
+{
+  "RunId": "20260827-191432",
+  "TimestampUtc": "2026-08-27T19:14:33Z",
+  "Totals": {
+    "items": 42,
+    "byAction": {
+      "group": 28,
+      "quarantine": 4,
+      "keep": 10
+    }
+  },
+  "Items": [
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/synthetic-tree",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 4096,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\EXPECTED.json",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/EXPECTED.json",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 140,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/Caches",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\npm",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/npm",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\npm\\_cacache",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/_cacache",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\npm\\_cacache\\index.json",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/index.json",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 14,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\pip",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/pip",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\pip\\wheel-1.0-py3-none-any.whl",
+      "action": "group",
+      "reason": "category Archive; rule=Archive",
+      "destination": "_Grouped/20260827-191432/Archive/wheel-1.0-py3-none-any.whl",
+      "reversible": true,
+      "category": "Archive",
+      "sizeBytes": 5004,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Documents",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/Documents",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Documents\\notes.txt",
+      "action": "group",
+      "reason": "category Document; rule=Document",
+      "destination": "_Grouped/20260827-191432/Document/notes.txt",
+      "reversible": true,
+      "category": "Document",
+      "sizeBytes": 13,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Documents\\report-final.pdf",
+      "action": "group",
+      "reason": "category Document; rule=Document",
+      "destination": "_Grouped/20260827-191432/Document/report-final.pdf",
+      "reversible": true,
+      "category": "Document",
+      "sizeBytes": 809,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Documents\\report.pdf",
+      "action": "group",
+      "reason": "category Document; rule=Document",
+      "destination": "_Grouped/20260827-191432/Document/report.pdf",
+      "reversible": true,
+      "category": "Document",
+      "sizeBytes": 809,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Downloads",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/Downloads",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Downloads\\old-backup.zip",
+      "action": "group",
+      "reason": "category Archive; rule=Archive",
+      "destination": "_Grouped/20260827-191432/Archive/old-backup.zip",
+      "reversible": true,
+      "category": "Archive",
+      "sizeBytes": 304,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Downloads\\scratch.tmp",
+      "action": "quarantine",
+      "reason": "category Junk; rule=Junk",
+      "destination": "_Quarantine/20260827-191432/Junk/scratch.tmp",
+      "reversible": true,
+      "category": "Junk",
+      "sizeBytes": 7,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Downloads\\session.bak",
+      "action": "quarantine",
+      "reason": "category Junk; rule=Junk",
+      "destination": "_Quarantine/20260827-191432/Junk/session.bak",
+      "reversible": true,
+      "category": "Junk",
+      "sizeBytes": 6,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Other",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/Other",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Other\\rust-tool",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/rust-tool",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Other\\rust-tool\\Cargo.lock",
+      "action": "keep",
+      "reason": "default keep; safety-pinned category: HeavyCache; rule=HeavyCache",
+      "destination": "",
+      "reversible": true,
+      "category": "HeavyCache",
+      "sizeBytes": 13,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Other\\rust-tool\\Cargo.toml",
+      "action": "keep",
+      "reason": "default keep; safety-pinned category: HeavyCache; rule=HeavyCache",
+      "destination": "",
+      "reversible": true,
+      "category": "HeavyCache",
+      "sizeBytes": 21,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Pictures",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/Pictures",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Pictures\\screenshot-2.png",
+      "action": "group",
+      "reason": "category Image; rule=Image",
+      "destination": "_Grouped/20260827-191432/Image/screenshot-2.png",
+      "reversible": true,
+      "category": "Image",
+      "sizeBytes": 68,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Pictures\\screenshot.png",
+      "action": "group",
+      "reason": "category Image; rule=Image",
+      "destination": "_Grouped/20260827-191432/Image/screenshot.png",
+      "reversible": true,
+      "category": "Image",
+      "sizeBytes": 68,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/Projects",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/demo-app",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 4096,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\package-lock.json",
+      "action": "keep",
+      "reason": "default keep; safety-pinned category: HeavyCache; rule=HeavyCache",
+      "destination": "",
+      "reversible": true,
+      "category": "HeavyCache",
+      "sizeBytes": 21,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\package.json",
+      "action": "keep",
+      "reason": "default keep; safety-pinned category: HeavyCache; rule=HeavyCache",
+      "destination": "",
+      "reversible": true,
+      "category": "HeavyCache",
+      "sizeBytes": 37,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\README.md",
+      "action": "group",
+      "reason": "category Document; rule=Document",
+      "destination": "_Grouped/20260827-191432/Document/README.md",
+      "reversible": true,
+      "category": "Document",
+      "sizeBytes": 12,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\.git",
+      "action": "keep",
+      "reason": "default keep; safety-pinned category: HeavyCache; rule=HeavyCache",
+      "destination": "",
+      "reversible": true,
+      "category": "HeavyCache",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\.git\\HEAD",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/HEAD",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 22,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\build",
+      "action": "keep",
+      "reason": "default keep; safety-pinned category: HeavyCache; rule=HeavyCache",
+      "destination": "",
+      "reversible": true,
+      "category": "HeavyCache",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\build\\app.zip",
+      "action": "group",
+      "reason": "category Archive; rule=Archive",
+      "destination": "_Grouped/20260827-191432/Archive/app.zip",
+      "reversible": true,
+      "category": "Archive",
+      "sizeBytes": 204,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\logs",
+      "action": "keep",
+      "reason": "default keep; safety-pinned category: HeavyCache; rule=HeavyCache",
+      "destination": "",
+      "reversible": true,
+      "category": "HeavyCache",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\logs\\service.log",
+      "action": "quarantine",
+      "reason": "category Junk; rule=Junk",
+      "destination": "_Quarantine/20260827-191432/Junk/service.log",
+      "reversible": true,
+      "category": "Junk",
+      "sizeBytes": 1400,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\node_modules",
+      "action": "keep",
+      "reason": "default keep; safety-pinned category: HeavyCache; rule=HeavyCache",
+      "destination": "",
+      "reversible": true,
+      "category": "HeavyCache",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\node_modules\\leftpad",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/leftpad",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\node_modules\\leftpad\\index.js",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/index.js",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 9,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\src",
+      "action": "keep",
+      "reason": "default keep; safety-pinned category: HeavyCache; rule=HeavyCache",
+      "destination": "",
+      "reversible": true,
+      "category": "HeavyCache",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\src\\index.js",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/index.js",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 19,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\src\\index.test.js",
+      "action": "group",
+      "reason": "category Other; rule=",
+      "destination": "_Grouped/20260827-191432/Other/index.test.js",
+      "reversible": true,
+      "category": "Other",
+      "sizeBytes": 21,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\tmp",
+      "action": "keep",
+      "reason": "default keep; safety-pinned category: HeavyCache; rule=HeavyCache",
+      "destination": "",
+      "reversible": true,
+      "category": "HeavyCache",
+      "sizeBytes": 0,
+      "sha1": ""
+    },
+    {
+      "path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\tmp\\leftover.tmp",
+      "action": "quarantine",
+      "reason": "category Junk; rule=Junk",
+      "destination": "_Quarantine/20260827-191432/Junk/leftover.tmp",
+      "reversible": true,
+      "category": "Junk",
+      "sizeBytes": 7,
+      "sha1": ""
+    }
+  ]
+}

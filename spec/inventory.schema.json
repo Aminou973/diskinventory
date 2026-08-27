@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://diskinventory.local/spec/inventory.schema.json",
+  "title": "DiskInventory inventory CSV schema",
+  "description": "The CSV header for inventory.csv. v2.0 ADDS columns to the right of the v1.1.0 set: MIMEType, DuplicateGroup, ExifDate, ClusterId. v1.1.0 readers should treat the extra columns as unknown and ignore them.",
+  "type": "array",
+  "items": { "type": "string" },
+  "minItems": 18,
+  "prefixItems": [
+    { "const": "Path" },
+    { "const": "Parent" },
+    { "const": "Name" },
+    { "const": "Kind" },
+    { "const": "SizeBytes" },
+    { "const": "LastWriteUtc" },
+    { "const": "CreatedUtc" },
+    { "const": "Category" },
+    { "const": "Action" },
+    { "const": "SuggestedAction" },
+    { "const": "PlannedDestination" },
+    { "const": "PlanAction" },
+    { "const": "RuleMatched" },
+    { "const": "IsHidden" },
+    { "const": "IsSystem" },
+    { "const": "IsOneDrivePlaceholder" },
+    { "const": "Sha1" },
+    { "const": "Notes" }
+  ]
+}

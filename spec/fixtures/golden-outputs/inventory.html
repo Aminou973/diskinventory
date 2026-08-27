@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DiskInventory 20260827-191432</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 14px/1.45 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         margin: 0; padding: 1.5rem; background: Canvas; color: CanvasText; }
+  h1 { margin-top: 0; font-size: 1.5rem; }
+  .tile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+               gap: .75rem; margin: 1rem 0; }
+  .tile { padding: .75rem 1rem; border: 1px solid #8884; border-radius: 8px;
+          background: color-mix(in oklab, Canvas 92%, CanvasText 8%); }
+  .tile .v { font-size: 1.4rem; font-weight: 600; }
+  .tile .k { font-size: .8rem; opacity: .75; text-transform: uppercase; letter-spacing: .04em; }
+  table { border-collapse: collapse; width: 100%; margin: .5rem 0 1.5rem; }
+  th, td { padding: .35rem .55rem; border-bottom: 1px solid #8883; text-align: left;
+           font-size: 13px; vertical-align: top; }
+  th { background: color-mix(in oklab, Canvas 86%, CanvasText 14%); position: sticky; top: 0; }
+  tr:hover td { background: color-mix(in oklab, Canvas 96%, CanvasText 4%); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  details { margin: .5rem 0 1rem; }
+  summary { cursor: pointer; font-weight: 600; padding: .25rem 0; }
+  .pill { display: inline-block; padding: 0 .5em; border-radius: 999px;
+          background: color-mix(in oklab, Canvas 85%, CanvasText 15%);
+          font-size: .8rem; }
+  .pager { margin: 1rem 0; }
+  .pager button { padding: .25rem .75rem; margin-right: .5rem; cursor: pointer; }
+  input[type="search"] { padding: .4rem .55rem; width: 100%; max-width: 360px;
+                         border: 1px solid #8886; border-radius: 6px;
+                         background: Field; color: FieldText; }
+  .override-row { cursor: pointer; }
+  .override-row.selected { outline: 2px solid Highlight; }
+  .footer { margin-top: 2rem; font-size: .8rem; opacity: .7; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1b1b1b; }
+    th { background: #2a2a2a; }
+    tr:hover td { background: #232323; }
+  }
+</style>
+</head>
+<body>
+<h1>DiskInventory — <span id="runId">20260827-191432</span></h1>
+<p>Generated <span id="ts"></span> · OS <span id="os"></span> · Admin <span id="admin"></span></p>
+
+<div class="tile-grid" id="tiles"></div>
+
+<h2>Heavy caches</h2>
+<div id="heavy"></div>
+
+<h2>Categories</h2>
+<div id="cats"></div>
+
+<h2>Top <span id="topN">100</span> by size</h2>
+<input type="search" id="filter" placeholder="Filter by path or category…" />
+<div class="pager">
+  <button id="prev">Prev</button>
+  <button id="next">Next</button>
+  <span id="pageInfo"></span>
+</div>
+<table id="big">
+  <thead>
+    <tr>
+      <th>Path</th>
+      <th class="num">Size</th>
+      <th>Category</th>
+      <th>Action</th>
+      <th>Override</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<details>
+  <summary>Warnings</summary>
+  <ul id="warns"></ul>
+</details>
+
+<div class="footer">DiskInventory v2.0 · offline · single file</div>
+
+<script id="envData" type="application/json">{"RunId": "20260827-191432", "TimestampUtc": "2026-08-27T19:14:32Z", "Os": {"Caption": "Test", "Version": "0", "Build": "0"}, "PowerShell": "Test", "Locale": {"Ui": "en", "Culture": "en", "DisplayName": "en"}, "Admin": false, "Drives": [], "UserProfiles": [], "HeavyCaches": [], "ProjectRoots": [], "ScanRoots": [{"Name": "root", "Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree"}], "ExcludedRoots": []}</script>
+<script id="statsData" type="application/json">{"items": 42, "categories": 6, "totalBytes": 17220}</script>
+<script id="heavyData" type="application/json">[]</script>
+<script id="warningsData" type="application/json">["golden test"]</script>
+<script id="rowsData" type="application/json">[{"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures", "Name": "synthetic-tree", "Kind": "Directory", "SizeBytes": 4096, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\EXPECTED.json", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree", "Name": "EXPECTED.json", "Kind": "File", "SizeBytes": 140, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree", "Name": "Caches", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\npm", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches", "Name": "npm", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\npm\\_cacache", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\npm", "Name": "_cacache", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\npm\\_cacache\\index.json", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\npm\\_cacache", "Name": "index.json", "Kind": "File", "SizeBytes": 14, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/json", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\pip", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches", "Name": "pip", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\pip\\wheel-1.0-py3-none-any.whl", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Caches\\pip", "Name": "wheel-1.0-py3-none-any.whl", "Kind": "File", "SizeBytes": 5004, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Archive", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Archive", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/zip", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Documents", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree", "Name": "Documents", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Documents\\notes.txt", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Documents", "Name": "notes.txt", "Kind": "File", "SizeBytes": 13, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Document", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Document", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Documents\\report-final.pdf", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Documents", "Name": "report-final.pdf", "Kind": "File", "SizeBytes": 809, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Document", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Document", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/pdf", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Documents\\report.pdf", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Documents", "Name": "report.pdf", "Kind": "File", "SizeBytes": 809, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Document", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Document", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/pdf", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Downloads", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree", "Name": "Downloads", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Downloads\\old-backup.zip", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Downloads", "Name": "old-backup.zip", "Kind": "File", "SizeBytes": 304, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Archive", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Archive", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/zip", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Downloads\\scratch.tmp", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Downloads", "Name": "scratch.tmp", "Kind": "File", "SizeBytes": 7, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Junk", "Action": "quarantine", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Junk", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Downloads\\session.bak", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Downloads", "Name": "session.bak", "Kind": "File", "SizeBytes": 6, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Junk", "Action": "quarantine", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Junk", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Other", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree", "Name": "Other", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Other\\rust-tool", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Other", "Name": "rust-tool", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Other\\rust-tool\\Cargo.lock", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Other\\rust-tool", "Name": "Cargo.lock", "Kind": "File", "SizeBytes": 13, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "HeavyCache", "Action": "keep", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "HeavyCache", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Other\\rust-tool\\Cargo.toml", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Other\\rust-tool", "Name": "Cargo.toml", "Kind": "File", "SizeBytes": 21, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "HeavyCache", "Action": "keep", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "HeavyCache", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Pictures", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree", "Name": "Pictures", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Pictures\\screenshot-2.png", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Pictures", "Name": "screenshot-2.png", "Kind": "File", "SizeBytes": 68, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Image", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Image", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "image/png", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Pictures\\screenshot.png", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Pictures", "Name": "screenshot.png", "Kind": "File", "SizeBytes": 68, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Image", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Image", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "image/png", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree", "Name": "Projects", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects", "Name": "demo-app", "Kind": "Directory", "SizeBytes": 4096, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\package-lock.json", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app", "Name": "package-lock.json", "Kind": "File", "SizeBytes": 21, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "HeavyCache", "Action": "keep", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "HeavyCache", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/json", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\package.json", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app", "Name": "package.json", "Kind": "File", "SizeBytes": 37, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "HeavyCache", "Action": "keep", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "HeavyCache", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/json", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\README.md", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app", "Name": "README.md", "Kind": "File", "SizeBytes": 12, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Document", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Document", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\.git", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app", "Name": ".git", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "HeavyCache", "Action": "keep", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "HeavyCache", "IsHidden": true, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\.git\\HEAD", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\.git", "Name": "HEAD", "Kind": "File", "SizeBytes": 22, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\build", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app", "Name": "build", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "HeavyCache", "Action": "keep", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "HeavyCache", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\build\\app.zip", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\build", "Name": "app.zip", "Kind": "File", "SizeBytes": 204, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Archive", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Archive", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/zip", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\logs", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app", "Name": "logs", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "HeavyCache", "Action": "keep", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "HeavyCache", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\logs\\service.log", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\logs", "Name": "service.log", "Kind": "File", "SizeBytes": 1400, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Junk", "Action": "quarantine", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Junk", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\node_modules", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app", "Name": "node_modules", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "HeavyCache", "Action": "keep", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "HeavyCache", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\node_modules\\leftpad", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\node_modules", "Name": "leftpad", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\node_modules\\leftpad\\index.js", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\node_modules\\leftpad", "Name": "index.js", "Kind": "File", "SizeBytes": 9, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\src", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app", "Name": "src", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "HeavyCache", "Action": "keep", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "HeavyCache", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\src\\index.js", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\src", "Name": "index.js", "Kind": "File", "SizeBytes": 19, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\src\\index.test.js", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\src", "Name": "index.test.js", "Kind": "File", "SizeBytes": 21, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Other", "Action": "group", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\tmp", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app", "Name": "tmp", "Kind": "Directory", "SizeBytes": 0, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "HeavyCache", "Action": "keep", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "HeavyCache", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}, {"Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\tmp\\leftover.tmp", "Parent": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree\\Projects\\demo-app\\tmp", "Name": "leftover.tmp", "Kind": "File", "SizeBytes": 7, "LastWriteUtc": "2026-08-27T19:14:02Z", "CreatedUtc": "2026-08-27T19:14:02Z", "Category": "Junk", "Action": "quarantine", "SuggestedAction": "", "PlannedDestination": "", "PlanAction": "", "RuleMatched": "Junk", "IsHidden": false, "IsSystem": false, "IsOneDrivePlaceholder": false, "Sha1": "", "Notes": "", "MIMEType": "application/octet-stream", "DuplicateGroup": "", "ExifDate": "", "ClusterId": ""}]</script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function jget(id) {
+    try { return JSON.parse($(id).textContent); } catch (e) { return null; }
+  }
+  var env = jget('envData') || {};
+  var stats = jget('statsData') || {};
+  var heavy = jget('heavyData') || [];
+  var warnings = jget('warningsData') || [];
+  var rows = jget('rowsData') || [];
+
+  $('runId').textContent = env.RunId || '(unknown)';
+  $('ts').textContent = env.TimestampUtc || '';
+  $('os').textContent = (env.Os && env.Os.Caption) || '';
+  $('admin').textContent = env.Admin ? 'yes' : 'no';
+
+  // Tiles
+  var tileData = [
+    ['k', 'Items', stats.items || rows.length],
+    ['k', 'Categories', stats.categories || 0],
+    ['k', 'Total bytes', (stats.totalBytes || 0).toLocaleString()],
+    ['k', 'Heavy caches', heavy.length],
+    ['k', 'Drives', (env.Drives || []).length],
+    ['k', 'User profiles', (env.UserProfiles || []).length]
+  ];
+  var tiles = $('tiles');
+  tileData.forEach(function (t) {
+    var d = document.createElement('div');
+    d.className = 'tile';
+    d.innerHTML = '<div class="v">' + t[2] + '</div><div class="k">' + t[1] + '</div>';
+    tiles.appendChild(d);
+  });
+
+  // Heavy caches
+  if (heavy.length) {
+    var t = document.createElement('table');
+    t.innerHTML = '<thead><tr><th>Name</th><th>Path</th><th class="num">Size</th><th class="num">Files</th></tr></thead>';
+    var tb = document.createElement('tbody');
+    heavy.slice().sort(function(a,b){return (b.SizeBytes||0)-(a.SizeBytes||0);}).forEach(function(h){
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>'+h.Name+'</td><td><code>'+h.Path+'</code></td><td class="num">'+(h.SizeBytes||0).toLocaleString()+'</td><td class="num">'+(h.FileCount||0).toLocaleString()+'</td>';
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+    $('heavy').appendChild(t);
+  }
+
+  // Categories
+  var cats = {};
+  rows.forEach(function (r) {
+    var k = r.Category || 'Other';
+    cats[k] = cats[k] || { count: 0, bytes: 0 };
+    cats[k].count += 1;
+    cats[k].bytes += (r.SizeBytes || 0);
+  });
+  var catRows = Object.keys(cats).sort(function (a, b) { return cats[b].bytes - cats[a].bytes; });
+  var cTable = document.createElement('table');
+  cTable.innerHTML = '<thead><tr><th>Category</th><th class="num">Items</th><th class="num">Bytes</th></tr></thead>';
+  var cBody = document.createElement('tbody');
+  catRows.forEach(function (k) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+k+'</td><td class="num">'+cats[k].count+'</td><td class="num">'+cats[k].bytes.toLocaleString()+'</td>';
+    cBody.appendChild(tr);
+  });
+  cTable.appendChild(cBody);
+  $('cats').appendChild(cTable);
+
+  // Big table (paginated, top N by size)
+  var PAGE = 50;
+  var top = rows.slice().sort(function (a, b) { return (b.SizeBytes || 0) - (a.SizeBytes || 0); }).slice(0, 500);
+  var filtered = top;
+  var page = 0;
+  function render() {
+    var body = $('big').getElementsByTagName('tbody')[0];
+    body.innerHTML = '';
+    var start = page * PAGE;
+    var end = Math.min(filtered.length, start + PAGE);
+    for (var i = start; i < end; i++) {
+      var r = filtered[i];
+      var tr = document.createElement('tr');
+      tr.className = 'override-row';
+      tr.dataset.path = r.Path || '';
+      tr.innerHTML =
+        '<td><code>' + (r.Path || '') + '</code></td>' +
+        '<td class="num">' + (r.SizeBytes || 0).toLocaleString() + '</td>' +
+        '<td>' + (r.Category || '') + '</td>' +
+        '<td>' + (r.Action || '') + '</td>' +
+        '<td><select data-act-for="' + (r.Path || '') + '">' +
+          '<option value="">— keep default —</option>' +
+          '<option value="keep">keep</option>' +
+          '<option value="group">group</option>' +
+          '<option value="archive">archive</option>' +
+          '<option value="quarantine">quarantine</option>' +
+          '<option value="delete">delete</option>' +
+          '<option value="move">move</option>' +
+        '</select></td>';
+      body.appendChild(tr);
+    }
+    $('pageInfo').textContent = 'Showing ' + (start + 1) + '–' + end + ' of ' + filtered.length;
+  }
+  $('prev').onclick = function () { if (page > 0) { page--; render(); } };
+  $('next').onclick = function () { if ((page + 1) * PAGE < filtered.length) { page++; render(); } };
+  $('filter').oninput = function (e) {
+    var q = (e.target.value || '').toLowerCase();
+    filtered = q ? top.filter(function (r) {
+      return ((r.Path || '').toLowerCase().indexOf(q) >= 0) ||
+             ((r.Category || '').toLowerCase().indexOf(q) >= 0);
+    }) : top;
+    page = 0;
+    render();
+  };
+
+  // Override download
+  var overrides = [];
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if (!t || !t.dataset || !t.dataset.actFor) return;
+    var p = t.dataset.actFor;
+    var v = t.value;
+    overrides = overrides.filter(function (o) { return o.path !== p; });
+    if (v) overrides.push({ path: p, action: v });
+  });
+  var btn = document.createElement('button');
+  btn.textContent = 'Download overrides.json';
+  btn.style.margin = '0 0 1rem';
+  btn.onclick = function () {
+    var blob = new Blob([JSON.stringify({ items: overrides }, null, 2)],
+                        { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'overrides.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  $('big').parentNode.insertBefore(btn, $('big').nextSibling);
+
+  // Warnings
+  var ul = $('warns');
+  warnings.forEach(function (w) {
+    var li = document.createElement('li');
+    li.textContent = w;
+    ul.appendChild(li);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

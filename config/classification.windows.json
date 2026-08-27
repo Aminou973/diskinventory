@@ -1,0 +1,39 @@
+[
+  {
+    "_comment": "Windows overlay. Merged AFTER config/classification.json. Additive — earlier rules in the base still win.",
+    "category": "App",
+    "match": {
+      "pathContains": ["\\program files", "\\program files (x86)", "\\appdata\\local\\programs"]
+    }
+  },
+  {
+    "category": "System",
+    "match": {
+      "pathContains": ["\\windows\\", "programdata", "$recycle.bin", "system volume information"]
+    }
+  },
+  {
+    "category": "HeavyCache",
+    "match": {
+      "pathContains": ["\\.gradle\\", "\\.nuget\\packages", "\\.cargo\\registry", "\\.m2\\repository", "\\.npm\\_cacache", "\\.cache\\pip", "\\.cache\\yarn", "\\.cache\\pnpm", "\\.docker\\"]
+    }
+  },
+  {
+    "category": "HeavyCache",
+    "match": {
+      "markerFiles": ["Cargo.lock", "go.sum", "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "Pipfile.lock", "poetry.lock"]
+    }
+  },
+  {
+    "category": "Project",
+    "match": {
+      "markerFiles": [".git", ".svn", ".hg", "package.json", "pyproject.toml", "Cargo.toml", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts", "composer.json", "*.csproj", "*.sln"]
+    }
+  },
+  {
+    "category": "OneDrive",
+    "match": {
+      "pathContains": ["\\onedrive\\", "\\onedrive - "]
+    }
+  }
+]

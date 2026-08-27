@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://diskinventory.local/spec/environment.schema.json",
+  "title": "DiskInventory environment snapshot",
+  "description": "Written by the detect step; consumed by the dashboard. Stable across v1.1.0 and v2.0.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["RunId","TimestampUtc","Os","PowerShell","Locale","Admin","Drives","UserProfiles","HeavyCaches","ProjectRoots","ScanRoots","ExcludedRoots"],
+  "properties": {
+    "RunId":         { "type": "string", "pattern": "^[0-9]{8}-[0-9]{6}$" },
+    "TimestampUtc":  { "type": "string" },
+    "Os": {
+      "type": "object",
+      "required": ["Caption","Version","Build"],
+      "properties": {
+        "Caption": { "type": "string" },
+        "Version": { "type": "string" },
+        "Build":   { "type": "string" }
+      }
+    },
+    "PowerShell":   { "type": "string" },
+    "Locale": {
+      "type": "object",
+      "required": ["Ui","Culture","DisplayName"],
+      "properties": {
+        "Ui":          { "type": "string" },
+        "Culture":     { "type": "string" },
+        "DisplayName": { "type": "string" }
+      }
+    },
+    "Admin":          { "type": "boolean" },
+    "Drives":         { "type": "array", "items": { "type": "object" } },
+    "UserProfiles":   { "type": "array", "items": { "type": "object" } },
+    "HeavyCaches":    { "type": "array", "items": { "type": "object" } },
+    "ProjectRoots":   { "type": "array", "items": { "type": "object" } },
+    "ScanRoots":      { "type": "array", "items": { "type": "object" } },
+    "ExcludedRoots":  { "type": "array", "items": { "type": "object" } }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "RunId": "20260827-191432",
+  "TimestampUtc": "2026-08-27T19:14:32Z",
+  "Os": {
+    "Caption": "Test",
+    "Version": "0",
+    "Build": "0"
+  },
+  "PowerShell": "Test",
+  "Locale": {
+    "Ui": "en",
+    "Culture": "en",
+    "DisplayName": "en"
+  },
+  "Admin": false,
+  "Drives": [],
+  "UserProfiles": [],
+  "HeavyCaches": [],
+  "ProjectRoots": [],
+  "ScanRoots": [
+    {
+      "Name": "root",
+      "Path": "C:\\Users\\oaak2\\Documents\\PowerShell\\DiskInventory\\spec\\fixtures\\synthetic-tree"
+    }
+  ],
+  "ExcludedRoots": []
+}

@@ -1,39 +1,29 @@
-# Per-run output - generated on every invocation, never commit
-out/
-
-# Windows / IDE noise
-Thumbs.db
-desktop.ini
-.DS_Store
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-*.tmp
-*.bak
-
-# PowerShell
-*.ps1~
+# DiskInventory .gitignore
 
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.Python
-*.egg-info/
 .pytest_cache/
 
-# OS-generated
-$RECYCLE.BIN/
-System Volume Information/
-
-# Local rule overrides (uncomment to opt in)
-# config/Rules.local.json
-# config/PathsToScan.local.json
-# config/classification.linux.local.json
-# config/paths_to_scan.linux.local.json
-
-# Release zips (built by release script, not committed)
+# Build / distribution
+build/
+dist/
+*.egg-info/
+*.whl
 *.zip
+
+# DiskInventory runtime outputs
+out/
+fleet-out/
+*.db
+
+# Local state
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test scratch
+spec/fixtures/_run/
