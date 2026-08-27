@@ -16,6 +16,15 @@ desktop.ini
 # PowerShell
 *.ps1~
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+
 # OS-generated
 $RECYCLE.BIN/
 System Volume Information/
@@ -23,3 +32,8 @@ System Volume Information/
 # Local rule overrides (uncomment to opt in)
 # config/Rules.local.json
 # config/PathsToScan.local.json
+# config/classification.linux.local.json
+# config/paths_to_scan.linux.local.json
+
+# Release zips (built by release script, not committed)
+*.zip

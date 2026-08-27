@@ -428,3 +428,90 @@ If you want to extend the tool, the cleanest places to add code are:
 ## 13. License
 
 Public domain / MIT. Use freely. No warranty — this tool moves files, even if only to quarantine. Always review the report before running `Auto`.
+
+---
+
+## 14. Linux port (v1.1.0)
+
+v1.1.0 adds a parallel **Python 3** implementation that runs on Linux and macOS.
+The two ports are independent: each ships its own entry point, source modules,
+and config files. They share only the **cross-platform contracts** below.
+
+### Shared contracts (byte-for-byte)
+
+1. **JSON-Lines journal format** — every entry has these fields in this order:
+   `ts, action, src, dst, category, sizeBytes, sha1, rule, reason, reversible, applied, error`.
+   A journal produced by the Linux port can be consumed by the Windows
+   `Restore-FromJournal.ps1 -Apply`, and vice versa.
+2. **SHA-1 (not SHA-256)** — must match what the restore module verifies.
+3. **Run ID format** `yyyyMMdd-HHmmss` UTC.
+4. **`environment.json` schema** — `RunId, TimestampUtc, Os:{Caption,Version,Build},
+   PowerShell, Locale:{Ui,Culture,DisplayName}, Admin, Drives[], UserProfiles[],
+   HeavyCaches[], ProjectRoots[], ScanRoots[], ExcludedRoots[]`.
+5. **CSV column order** — `Path,Parent,Name,Kind,SizeBytes,LastWriteUtc,CreatedUtc,
+   Category,Action,SuggestedAction,PlannedDestination,PlanAction,RuleMatched,
+   IsHidden,IsSystem,IsOneDrivePlaceholder,Sha1,Notes`.
+6. **`overrides.json` shape** — `{ "items": [ { "path": "...", "action": "..." } ] }`.
+7. **`paths_to_scan.json` schema** — `scanRoots.*`, `excludeGlobs`,
+   `excludeFileNames`, `excludeExtensions`, `sizeCache*`, `quarantineRootName`,
+   `archiveRootName`, `groupRootName`. Config files are now platform-flavored:
+   `paths_to_scan.linux.json` and `classification.linux.json` for the Python port.
+8. **5-step pipeline order** — Detect → Collect → Classify → Plan → Export (+ Apply).
+9. **Modes** — `report`, `dryrun`, `auto` (and `restore`, `purge` subcommands).
+10. **Safety nets** — `App/System/Project/Data/HeavyCache` force-`keep`; exclude-glob
+    re-check; non-interactive Auto without `--yes` is refused.
+11. **Prompt semantics** — Auto without `--yes` asks once Y/N; Auto with `--yes`
+    asks per action with `A` (accept-all); non-interactive Auto without `--yes`
+    refused.
+
+### Linux port layout
+
+```
+DiskInventory\
+  disk-inventory.py            # argparse entry point
+  disk-inventory.sh            # bash launcher
+  src/
+    detect_environment.py      # replaces Detect-Environment.ps1
+    collect_inventory.py       # replaces Collect-Inventory.ps1
+    classify_items.py          # replaces Classify-Items.ps1
+    plan_actions.py            # replaces Plan-Actions.ps1
+    apply_actions.py           # replaces Apply-Actions.ps1 (only mutating module)
+    export_reports.py          # replaces Export-Reports.ps1
+    restore_from_journal.py    # replaces Restore-FromJournal.ps1
+  config/
+    classification.linux.json  # Linux-flavored rules
+    paths_to_scan.linux.json   # Linux-flavored probes
+```
+
+### Linux detection (replaces each Windows call)
+
+| What | Windows | Linux |
+|---|---|---|
+| OS | `Get-CimInstance Win32_OperatingSystem` | Read `/etc/os-release` |
+| Runtime | `$PSVersionTable.PSVersion` | `platform.python_version()` |
+| Admin | `WindowsPrincipal.IsInRole(Administrator)` | `os.geteuid() == 0` |
+| Fixed drives | `Get-PSDrive -PSProvider FileSystem` | `/proc/mounts` (filter pseudo-FS types) + `shutil.disk_usage` |
+| User profiles | `C:\Users\*` minus `Public/Default*` | `/home/*` + `/root` if root + iterate `pwd.getpwall()` |
+| OneDrive | registry + `AppData\Local\OneDrive` | `~/.config/OneDrive`, `onedrive` process, `~/.cache/OneDrive` |
+| UWP / AppX | `AppData\Local\Packages\*\LocalCache` | Flatpak `~/.var/app/*`, Snap `~/snap/*` |
+| Heavy caches | WinSxS, Installer, CrashDumps, thumbcache, … | `~/.cache/*`, `/var/cache/*`, `/var/tmp/*`, `~/.cargo/registry`, `~/.rustup`, `~/.npm`, `~/.gem`, `~/.m2/repository`, `~/.gradle`, `~/.ollama/models`, `~/.local/share/Steam/steamapps`, etc. |
+| adminOnlyRoots | `C:\Program Files`, `C:\Windows` | `/usr`, `/usr/local`, `/boot`, `/etc`, `/var/lib/dpkg`, `/var/lib/rpm` |
+| Hidden files | `FileAttributes::Hidden` bit | filename prefix `.` |
+| OneDrive placeholder | `FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS` (0x400000) | not available — field is always `false` on Linux |
+| Non-interactive | `[Environment]::UserInteractive` | `sys.stdin.isatty()` |
+
+### Linux-specific limitations (vs. Windows)
+
+- **No OneDrive-placeholder detection** (Linux client serves files normally).
+- **No UWP/AppX inventory** — replaced by Flatpak + Snap detection.
+- **No thumbcache detection** in `~/.cache/thumbnails` (only surfaces in
+  HeavyCaches summary, not classified per-file).
+
+### Why two ports, not one engine
+
+The Windows tool's detection logic is full of CIM, `WindowsPrincipal`,
+registry, UWP paths, OneDrive placeholders, and Windows-only marker files
+(`.iss`, `winget-manifest.yaml`, `setup.exe`, `*.msi`, `~$*` Office
+lockfiles). A "compat shim" would be heavier and buggier than a clean Python
+rewrite that mirrors the architecture but speaks Linux natively. The two
+ports share only the journal + config + report schemas.

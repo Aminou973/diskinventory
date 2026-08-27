@@ -1,11 +1,19 @@
 # DiskInventory
 
-A portable, self-discovering PowerShell 5.1 tool that scans a Windows machine, classifies
-every file and folder it finds, and produces a unified **CSV + HTML + Markdown** report.
-Optionally moves or quarantines items in a controlled, fully reversible way.
+A portable, self-discovering disk-inventory + cleanup tool.
 
-The tool **auto-detects** its environment — no machine-specific paths are hard-coded.
-Copy the folder to any Windows box and run it.
+- **Windows**: PowerShell 5.1 (this folder). See [`Run.bat`](Run.bat) and
+  [`Invoke-Inventory.ps1`](Invoke-Inventory.ps1).
+- **Linux / macOS**: Python 3 (see [`README-LINUX.md`](README-LINUX.md)). Same
+  engine, same journal format, same HTML report layout.
+
+Both versions share the **same JSON-Lines journal format** — a journal produced
+on one platform can be restored on the other.
+
+The tool **auto-detects** its environment — no machine-specific paths are
+hard-coded. Copy the right folder (Windows or Linux) to any box and run it.
+
+## What it does
 
 ## What it does
 

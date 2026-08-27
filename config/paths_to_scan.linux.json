@@ -1,0 +1,98 @@
+{
+  "$comment": "DiskInventory — Linux/macOS scan configuration. Every entry is a PROBE: it's added only if it exists and is readable on this machine. Edit Rules.local.json / PathsToScan.local.json to override without touching this file.",
+
+  "scanRoots": {
+    "allFixedDrives": true,
+    "allUserProfiles": true,
+
+    "perProfileStandardFolders": [
+      "Documents", "Desktop", "Downloads",
+      ".config", ".local/share", ".local/state", ".cache",
+      "Pictures", "Videos", "Music"
+    ],
+    "perProfileOptionalFolders": [
+      ".claude", ".ollama", ".android", ".config",
+      ".docker", ".kube", ".ssh", ".gnupg", ".local",
+      "source", "repos", "Projects"
+    ],
+    "perUserProjectRoots": [
+      "Projects", "Repos", "src", "code", "dev"
+    ],
+
+    "commonProjectRoots": [
+      "/srv", "/opt", "/workspace"
+    ],
+
+    "adminOnlyRoots": [
+      "/usr", "/usr/local", "/boot", "/etc",
+      "/var/lib/dpkg", "/var/lib/rpm"
+    ]
+  },
+
+  "excludeGlobs": [
+    "/.Trash-",
+    "/lost+found",
+    "/.git/objects",
+    "/.git/lfs/objects",
+    "/.svn/",
+    "/.hg/",
+    "/node_modules/",
+    "/bower_components/",
+    "/jspm_packages/",
+    "/venv/",
+    "/.venv/",
+    "/env/",
+    "/__pycache__/",
+    "/.pytest_cache/",
+    "/.tox/",
+    "/.cache/",
+    "/.mypy_cache/",
+    "/.ruff_cache/",
+    "/.parcel-cache/",
+    "/.turbo/",
+    "/dist/",
+    "/build/",
+    "/target/debug/",
+    "/target/release/",
+    "/.next/",
+    "/.nuxt/",
+    "/.svelte-kit/",
+    "/.angular/",
+    "/coverage/",
+    "/.cargo/registry/",
+    "/.rustup/",
+    "/.gem/",
+    "/.npm/",
+    "/.nvm/",
+    "/go/pkg/",
+    "/snap/"
+  ],
+
+  "excludeFileNames": [
+    ".DS_Store",
+    "Thumbs.db",
+    "desktop.ini",
+    "nohup.out",
+    "core",
+    ".~lock.",
+    ".goutputstream-",
+    "*.swp",
+    "*.swo",
+    "*~"
+  ],
+
+  "excludeExtensions": [
+    ".tmp", ".temp", ".part", ".partial",
+    ".crdownload", ".download",
+    ".log", ".pyc", ".pyo"
+  ],
+
+  "sizeCacheEnabled": true,
+  "sizeCacheFileName": "size-cache.json",
+
+  "quarantineRootName": "_Quarantine",
+  "archiveRootName": "_Archive",
+  "groupRootName": "_Grouped",
+
+  "reportNamePrefix": "inventory"
+}
