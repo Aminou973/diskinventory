@@ -1,156 +1,39 @@
-{
-  "$comment": "DiskInventory — Linux/macOS classification rules. First-match per category. Edit Rules.local.json to override without touching this file.",
-
-  "defaultCategory": "Unknown",
-  "defaultAction": "keep",
-  "deleteAllowedCategories": ["Junk"],
-
-  "archive": {
-    "olderThanDays": 180,
-    "fileExtensions": [".zip", ".7z", ".rar", ".tar", ".tar.gz", ".tgz", ".tar.bz2", ".tbz2", ".iso"],
-    "folderPatterns": ["*backup*", "*old*", "*archive*", "*-copy*", "*legacy*"]
-  },
-
-  "junk": {
-    "filePatterns": ["*.tmp", "*.temp", "*.bak", "*.orig", "*.rej", "*.swp", "*.swo", "*~"],
-    "folderPatterns": ["__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".cache", ".tox", ".parcel-cache", ".turbo", "node_modules", "bower_components", "venv", ".venv", "env", "target", "dist", "build", "out"]
-  },
-
-  "categories": [
-    {
-      "name": "System",
-      "action": "keep",
-      "match": {
-        "pathContains": [
-          "/usr/", "/usr/local/", "/boot/", "/etc/", "/var/lib/dpkg/", "/var/lib/rpm/",
-          "/lib/", "/lib64/", "/sbin/", "/bin/",
-          "/proc/", "/sys/", "/dev/"
-        ]
-      }
-    },
-    {
-      "name": "App",
-      "action": "keep",
-      "match": {
-        "pathContains": [
-          "/usr/", "/usr/local/", "/opt/", "/snap/", "/var/lib/flatpak/", "/var/lib/snapd/"
-        ]
-      }
-    },
-    {
-      "name": "App",
-      "action": "keep",
-      "match": {
-        "markerFiles": [
-          "Makefile", "configure", "configure.ac", "Makefile.am",
-          "CMakeLists.txt", "meson.build",
-          "setup.py", "pyproject.toml", "package.json",
-          "*.spec", "*.desktop", "*.AppImage", "*.deb", "*.rpm",
-          "snapcraft.yaml", "manifest.json", "Dockerfile", "docker-compose.yml",
-          "*.flatpak"
-        ]
-      }
-    },
-    {
-      "name": "Project",
-      "action": "keep",
-      "match": {
-        "markerFiles": [
-          ".git", ".svn", ".hg", ".bzr",
-          "package.json", "pyproject.toml", "requirements.txt", "Pipfile",
-          "poetry.lock", "Cargo.toml", "go.mod", "go.sum",
-          "pom.xml", "build.gradle", "build.gradle.kts",
-          "Makefile", "CMakeLists.txt", "meson.build",
-          "configure", "configure.ac", "Makefile.am",
-          "*.csproj", "*.fsproj", "*.sln",
-          "*.gemspec", "Rakefile", "Build.kt", "build.ninja",
-          "docker-compose.yml", "docker-compose.yaml", "Dockerfile",
-          "snapcraft.yaml", "flake.nix", "shell.nix",
-          "*.cabal", "stack.yaml"
-        ]
-      }
-    },
-    {
-      "name": "HeavyCache",
-      "action": "keep",
-      "match": {
-        "pathContains": [
-          "/.cache/",
-          "/var/cache/",
-          "/var/tmp/",
-          "/.var/app/",
-          "/snap/",
-          "/.local/share/Trash/",
-          "/.cargo/registry/",
-          "/.rustup/",
-          "/.gem/",
-          "/.npm/",
-          "/.nvm/",
-          "/go/pkg/",
-          "/.ollama/models/",
-          "/.cache/pip/",
-          "/.cache/yarn/",
-          "/.cache/electron/",
-          "/.cache/thumbnails/",
-          "/.m2/repository/",
-          "/.gradle/",
-          "/.local/share/Steam/steamapps/",
-          "/var/lib/flatpak/runtime/",
-          "/var/cache/apt/archives/",
-          "/var/cache/pacman/pkg/"
-        ]
-      }
-    },
-    {
-      "name": "Archive",
-      "action": "archive",
-      "match": {
-        "pathLike": [
-          "*/backup*", "*/old*", "*/archive*", "*/legacy*", "*/-copy*", "*/_v[0-9]*"
-        ]
-      }
-    },
-    {
-      "name": "Archive",
-      "action": "archive",
-      "match": {
-        "fileExtensions": [".zip", ".7z", ".rar", ".tar", ".tar.gz", ".tgz", ".tar.bz2", ".tbz2", ".iso"]
-      }
-    },
-    {
-      "name": "Junk",
-      "action": "quarantine",
-      "match": {
-        "nameLike": [
-          "*.tmp", "*.temp", "*.part", "*.partial", "*.crdownload", "*.download",
-          "*.bak", "*.orig", "*.rej", "*.swp", "*.swo",
-          ".DS_Store", "Thumbs.db", "desktop.ini",
-          "core", "nohup.out"
-        ]
-      }
-    },
-    {
-      "name": "Junk",
-      "action": "quarantine",
-      "match": {
-        "nameEquals": [
-          "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
-          ".cache", ".tox", ".parcel-cache", ".turbo",
-          "node_modules", "bower_components",
-          "venv", ".venv", "env",
-          "target", "dist", "build", "out"
-        ]
-      }
-    },
-    {
-      "name": "Data",
-      "action": "keep",
-      "match": {
-        "pathContains": [
-          "/Documents/", "/Desktop/", "/Downloads/",
-          "/Pictures/", "/Videos/", "/Music/"
-        ]
-      }
+[
+  {
+    "_comment": "Linux overlay. Merged AFTER config/classification.json. Additive — earlier rules in the base still win.",
+    "category": "App",
+    "match": {
+      "pathContains": ["/usr/bin", "/usr/local/bin", "/opt/", "/snap/", "/.local/bin"]
     }
-  ]
-}
+  },
+  {
+    "category": "System",
+    "match": {
+      "pathContains": ["/usr/lib", "/usr/share", "/etc", "/var/lib", "/var/cache", "/var/log", "/var/tmp", "/boot", "/sys/", "/proc/", "/run/", "/dev/", "/lib/", "/lib64/"]
+    }
+  },
+  {
+    "category": "HeavyCache",
+    "match": {
+      "pathContains": ["/go/pkg/mod", "/.cargo/registry", "/.npm/_cacache", "/.cache/pip", "/.cache/yarn", "/.cache/pnpm", "/.gradle/", "/.m2/repository", "/.nuget/packages", "/.docker/"]
+    }
+  },
+  {
+    "category": "HeavyCache",
+    "match": {
+      "markerFiles": ["Cargo.lock", "go.sum", "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "Pipfile.lock", "poetry.lock"]
+    }
+  },
+  {
+    "category": "Project",
+    "match": {
+      "markerFiles": [".git", ".svn", ".hg", "package.json", "pyproject.toml", "Cargo.toml", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts", "composer.json", "*.csproj", "*.sln", "meson.build", "Makefile", "CMakeLists.txt"]
+    }
+  },
+  {
+    "category": "Trash",
+    "match": {
+      "pathContains": ["/.local/share/Trash", "/.Trash", "/Trash"]
+    }
+  }
+]
