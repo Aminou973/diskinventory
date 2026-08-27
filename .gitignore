@@ -1,0 +1,25 @@
+# Per-run output - generated on every invocation, never commit
+out/
+
+# Windows / IDE noise
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.tmp
+*.bak
+
+# PowerShell
+*.ps1~
+
+# OS-generated
+$RECYCLE.BIN/
+System Volume Information/
+
+# Local rule overrides (uncomment to opt in)
+# config/Rules.local.json
+# config/PathsToScan.local.json
