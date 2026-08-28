@@ -323,6 +323,20 @@ class _Handler(BaseHTTPRequestHandler):
             body = _DASHBOARD_HTML.encode("utf-8")
             self._text(200, body, "text/html; charset=utf-8")
             return
+        if path == "/setup":
+            # First-run wizard
+            from src.wizard import setup_html
+            from src.scan_roots import smart_defaults
+            try:
+                roots = smart_defaults()
+            except Exception:
+                roots = []
+            from src import env_detect  # for VERSION constant if present
+            engine = getattr(env_detect, "VERSION", "3.0")
+            body = setup_html(engine_version=engine,
+                              smart_roots=roots).encode("utf-8")
+            self._text(200, body, "text/html; charset=utf-8")
+            return
         if path == "/api/run":
             self._json(200, {
                 "RunId": self.state.get_env().get("RunId", ""),
@@ -431,25 +445,71 @@ class _Handler(BaseHTTPRequestHandler):
             self.state.pause_flag.clear()
             self._json(200, {"ok": True, "paused": False})
             return
+        if path == "/api/setup":
+            # Persist wizard config to ~/.diskinventory/config.json
+            try:
+                payload = json.loads(body.decode("utf-8"))
+            except json.JSONDecodeError:
+                self._json(400, {"error": "invalid json"})
+                return
+            from src.wizard import save_config, WizardConfig
+            try:
+                cfg = WizardConfig(
+                    scan_roots=payload.get("scan_roots", []),
+                    compute_hashes=bool(payload.get("compute_hashes", False)),
+                    classify_cluster=bool(payload.get("classify_cluster", False)),
+                    classify_exif=bool(payload.get("classify_exif", False)),
+                    auto_purge_days=int(payload.get("auto_purge_days", 30)),
+                    notify_webhook=payload.get("notify_webhook", ""),
+                )
+                out = save_config(cfg)
+            except Exception as e:
+                self._json(500, {"error": str(e)})
+                return
+            self._json(200, {"ok": True, "saved": str(out)})
+            return
         self._json(404, {"error": "not found", "path": path})
 
 
 # --- Public entry ---------------------------------------------------------
 
 def build_server(state: _State, *, host: str = "127.0.0.1", port: int = 8765,
-                 token: str | None = None) -> ThreadingHTTPServer:
-    srv = ThreadingHTTPServer((host, port), _Handler)
+                 token: str | None = None,
+                 fallback_port_ring: int = 0) -> ThreadingHTTPServer | None:
+    """Bind a ThreadingHTTPServer. On port-in-use, scan ``preferred..+ring``.
+
+    Returns None if no port could be bound. v3 callers should use the
+    actual port from the bound ``srv`` (``srv.server_address[1]``).
+    """
+    from src.port_check import free_port
+    chosen = port
+    if not fallback_port_ring:
+        srv = ThreadingHTTPServer((host, port), _Handler)
+    else:
+        chosen = free_port(host, preferred=port, ring=fallback_port_ring)
+        if chosen == 0:
+            return None
+        srv = ThreadingHTTPServer((host, chosen), _Handler)
     srv.RequestHandlerClass.state = state
     srv.RequestHandlerClass.token = token
     return srv
 
 
-def serve_forever(state: _State, *, host: str, port: int, token: str | None = None) -> None:
+def serve_forever(state: _State, *, host: str, port: int, token: str | None = None) -> int:
+    """Bind and serve. Returns the port the server actually bound (may differ
+    from the requested port when ``fallback_port_ring`` is engaged via
+    :func:`build_server`). Returns ``0`` on total failure.
+    """
     srv = build_server(state, host=host, port=port, token=token)
-    print(f"[serve] http://{host}:{port} (run dir: {state.run_dir})")
+    if srv is None:
+        print(f"[serve] could not bind {host}:{port}; no free port in ring")
+        return 0
+    actual = int(srv.server_address[1])
+    print(f"[serve] http://{host}:{actual} (run dir: {state.run_dir})")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
         pass
     finally:
         srv.server_close()
+    return actual

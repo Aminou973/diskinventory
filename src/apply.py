@@ -89,11 +89,25 @@ def apply_plan(
     base_dir: Path | str,
     what_if: bool = False,
     progress: Callable[[int, int], None] | None = None,
+    pause_flag: threading.Event | None = None,
+    broadcast: Callable[[dict], None] | None = None,
+    error_log: Any | None = None,
 ) -> dict:
     """Walk the plan, mutate files (unless what_if), append to the journal.
 
     Returns a summary { applied: int, skipped: int, errors: int }.
+
+    Optional v3 hooks:
+
+    * ``pause_flag`` — a threading.Event; apply checks ``pause_flag.wait()``
+      between items so the dashboard "Pause" button works during a live
+      apply run. The pause is non-blocking when ``pause_flag`` is None.
+    * ``broadcast(entry)`` — called with each journal entry as soon as it
+      is written, so the dashboard's SSE stream shows it live.
+    * ``error_log`` — an ``src.errorlog.ErrorLog`` instance; per-item
+      errors are appended with the ``apply`` stage tag.
     """
+    import threading
     journal_path = Path(journal_path) if not isinstance(journal_path, Path) else journal_path
     base = Path(base_dir) if not isinstance(base_dir, Path) else base_dir
     journal_path.parent.mkdir(parents=True, exist_ok=True)
@@ -106,27 +120,46 @@ def apply_plan(
     # Open in append + read so we never lose entries on crash.
     with open(journal_path, "a", encoding="utf-8") as fh:
         for i, item in enumerate(items):
+            # Pause gate (non-blocking when None or set).
+            if pause_flag is not None:
+                try:
+                    pause_flag.wait(timeout=0.05)
+                except Exception:
+                    pass
             action = item.get("action", "")
             error = None
             ok = False
-            if what_if:
-                # DryRun: record what WOULD have happened, applied=False.
-                entry = _mk_entry({**item, "rule": item.get("category")}, False, None)
-                # Mark applied False explicitly (defensive)
-                entry["applied"] = False
-                fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
-                summary["skipped"] += 1
-            else:
-                ok, error = _apply_one(item, base_dir=base)
-                entry = _mk_entry({**item, "rule": item.get("category")}, ok, error)
-                if ok:
-                    entry["applied"] = True
-                    summary["applied"] += 1
-                else:
+            entry = None
+            try:
+                if what_if:
+                    entry = _mk_entry({**item, "rule": item.get("category")}, False, None)
                     entry["applied"] = False
-                    summary["errors"] += 1
-                fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
-                fh.flush()
+                    summary["skipped"] += 1
+                else:
+                    ok, error = _apply_one(item, base_dir=base)
+                    entry = _mk_entry({**item, "rule": item.get("category")}, ok, error)
+                    if ok:
+                        entry["applied"] = True
+                        summary["applied"] += 1
+                    else:
+                        entry["applied"] = False
+                        summary["errors"] += 1
+            except Exception as e:  # never let apply crash mid-run
+                error = f"unexpected: {e}"
+                summary["errors"] += 1
+                if error_log is not None:
+                    error_log.add("apply", error=error,
+                                  path=str(item.get("path", "")),
+                                  phase="apply_one")
+                entry = _mk_entry(item, False, error)
+                entry["applied"] = False
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            fh.flush()
+            if broadcast is not None:
+                try:
+                    broadcast(entry)
+                except Exception:
+                    pass
             if progress and (i + 1) % 25 == 0:
                 progress(i + 1, n)
     if progress:
